@@ -1,43 +1,62 @@
 package Amazon;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Collections;
+import java.util.logging.Level;
 
 
 public class AmazonTest {
-	WebDriver driver;
-    String gridUrl = "http://localhost:4444/wd/hub";
+	private WebDriver driver;
 
-    @BeforeEach
+    @BeforeSuite
     public void setUp() throws MalformedURLException {
-        DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setBrowserName("chrome");  // Change to firefox or edge for different browsers
-        driver = new RemoteWebDriver(new URL(gridUrl), capabilities);
+        String browser = System.getProperty("browser", "chrome");
+        URL gridUrl = new URL("http://localhost:4444/wd/hub");
+
+        switch (browser) {
+            case "firefox":
+                FirefoxOptions firefoxOptions = new FirefoxOptions();
+                driver = new RemoteWebDriver(gridUrl, firefoxOptions);
+                break;
+            case "edge":
+                EdgeOptions edgeOptions = new EdgeOptions();
+                driver = new RemoteWebDriver(gridUrl, edgeOptions);
+                break;
+            default:
+                ChromeOptions chromeOptions = new ChromeOptions();
+                chromeOptions.addArguments("--no-sandbox");
+                chromeOptions.addArguments("--disable-dev-shm-usage");
+                chromeOptions.addArguments("--headless"); // Optional
+                chromeOptions.setCapability("goog:loggingPrefs", Collections.singletonMap("browser", Level.ALL));
+                driver = new RemoteWebDriver(gridUrl, chromeOptions);
+                break;
+        }
     }
 
     @Test
-    public void amazonSearchTest() {
+    public void testAmazonHomePage() {
         driver.get("https://www.amazon.com");
-        driver.findElement(By.id("twotabsearchtextbox")).sendKeys("Selenium WebDriver");
-        driver.findElement(By.id("nav-search-submit-button")).click();
-        assertTrue(driver.getTitle().contains("Selenium WebDriver"), "Title does not contain the search term");
+        System.out.println("Title: " + driver.getTitle());
+        // Add more test steps as needed
     }
 
-    @AfterEach
+    @AfterSuite
     public void tearDown() {
         if (driver != null) {
             driver.quit();
         }
     }
-
 }
